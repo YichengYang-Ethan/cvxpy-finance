@@ -1,0 +1,26 @@
+[project]
+name = "cvxpy-finance"
+version = "0.1.0"
+description = "CVXPY tutorials for portfolio optimization: DPP patterns, mean-variance, and Spinu risk parity"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Yicheng (Ethan) Yang"}]
+requires-python = ">=3.10"
+dependencies = [
+    "cvxpy>=1.5",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "yfinance>=0.2.40",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyter",
+    "nbformat",
+    "nbclient",
+    "ruff",
+]
+
+[project.urls]
+Homepage = "https://github.com/YichengYang-Ethan/cvxpy-finance"
