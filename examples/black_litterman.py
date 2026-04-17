@@ -246,11 +246,10 @@ def bl_posterior_closed_form(
 # "look, the BL posterior IS a convex program".
 #
 # We use the Cholesky reformulation once more: for any PD matrix M with
-# M = L @ L.T, the quadratic form x.T @ M^-1 @ x can be rewritten as
-# sum_squares((L^-1).T @ x) = sum_squares(inv_L.T @ x) where inv_L =
-# np.linalg.inv(L). (Equivalently: sum_squares(L_inv_sqrt @ x) with
-# L_inv_sqrt = scipy.linalg.sqrtm(np.linalg.inv(M)), but the Cholesky
-# factorization is cheaper and stabler for PD inputs.)
+# M = L @ L.T, define Linv = inv(L). Then
+#     x.T @ inv(M) @ x = x.T @ Linv.T @ Linv @ x = ||Linv @ x||^2
+#                       = sum_squares(Linv @ x).
+# Watch the transpose: Linv, not Linv.T. See _inv_cholesky below.
 
 def _inv_cholesky(m: np.ndarray) -> np.ndarray:
     """Return ``Linv = inv(chol(M))`` for PD ``M``.
@@ -638,10 +637,10 @@ def demo_constrained_views(prices: pd.DataFrame) -> None:
 #   3. BL-with-views MV     — views from a simple momentum signal
 #
 # The momentum views: each rebalancing day, the top-3 and bottom-3 assets
-# by trailing 60-day return get views proportional to the z-score of
-# their trailing return. This is a deliberately simple signal — we don't
-# claim it predicts returns; we only use it to generate non-trivial
-# view vectors for the tutorial.
+# by trailing 60-day return get fixed-magnitude absolute views (+/- 5%
+# annualized). This is a deliberately simple signal — we don't claim it
+# predicts returns; we only use it to generate non-trivial view vectors
+# for the tutorial.
 
 def _mv_weights(
     mu: np.ndarray,
@@ -656,7 +655,10 @@ def _mv_weights(
     constraints = [cp.sum(w) == 1]
     if long_only:
         constraints.append(w >= 0)
-    cp.Problem(cp.Maximize(obj), constraints).solve()
+    prob = cp.Problem(cp.Maximize(obj), constraints)
+    prob.solve()
+    if w.value is None:
+        raise RuntimeError(f"MV solve failed (status={prob.status})")
     return np.asarray(w.value)
 
 
@@ -665,9 +667,9 @@ def _momentum_views(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate P, Q, Omega from a 60-day momentum signal.
 
-    Top-k assets get positive absolute views of magnitude ``strength``;
-    bottom-k get symmetric negative views. Omega is set to zero so the
-    views bind tightly — but we floor it slightly so the matrix is PD.
+    Top-k assets by trailing return get fixed positive absolute views of
+    magnitude ``strength``; bottom-k get symmetric negative views. Omega
+    uses the He-Litterman default (moderately confident, not pinned).
     """
     trailing = (1.0 + window_returns.tail(60)).prod() - 1.0
     top = trailing.sort_values(ascending=False).head(k).index.tolist()

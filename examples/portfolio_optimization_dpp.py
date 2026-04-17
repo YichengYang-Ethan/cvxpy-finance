@@ -26,8 +26,8 @@ Three things you will learn:
        take minutes now takes seconds, which is the difference between
        "try one idea a day" and "try twenty ideas before lunch". Section
        9 runs that backtest on real market data and shows the optimizer
-       produces a sensible, well-diversified portfolio that beats the
-       equal-weight benchmark on every risk-adjusted metric.
+       produces a sensible, well-diversified portfolio with risk-adjusted
+       performance compared against an equal-weight benchmark.
 
 This file is the runnable reference implementation. A matching Jupyter
 notebook (``portfolio_optimization_dpp.ipynb``) contains the same content
@@ -170,10 +170,9 @@ def solve_naive(spec: ProblemSpec) -> np.ndarray:
 # rebalancers update covariance weekly or monthly anyway, because daily
 # covariance estimates are noisy and slower-moving than return forecasts.
 #
-# Key DPP rule: Parameters are classified as *affine*, and multiplication
-# in a DPP objective requires at least one factor to be a plain constant
-# (no parameters, no variables). That is why gamma stays as a Python float
-# here instead of being wrapped in cp.Parameter.
+# Note: gamma could also be a cp.Parameter(nonneg=True) without breaking
+# DPP — CVXPY is fine with nonneg-parameter times a convex atom. We keep
+# it as a Python float here for simplicity, not out of necessity.
 
 class DPPRebalancer:
     """Rebuild-once, solve-many mean-variance rebalancer with fixed Sigma."""
@@ -443,7 +442,7 @@ def benchmark(prices: pd.DataFrame, n_days: int = 60) -> BenchmarkResult:
 #     3. Apply the resulting weights to the realized return of day t+1.
 #     4. Carry the new weights forward as w_prev for the next day's solve.
 #
-# We compare the optimizer against a naive equal-weight buy-and-hold baseline
+# We compare the optimizer against a daily-rebalanced equal-weight baseline
 # and report total return, annualized Sharpe, max drawdown, and turnover.
 # Sigma is refreshed weekly — that's the realistic cadence, and it shows off
 # the DPP cache: we only rebuild the Problem on Sigma updates, not on every
@@ -682,8 +681,8 @@ def save_plots(
 #    once. CVXPY's DPP machinery caches the canonicalization and re-solves
 #    skip straight to the solver.
 #
-# 2. Multiplication in DPP is linear: at least one factor must be a plain
-#    constant. gamma_param * convex_expression breaks the rule.
+# 2. Scalar parameters with sign attributes (nonneg=True, nonpos=True) can
+#    multiply convex/concave atoms and stay DPP. gamma could be a Parameter.
 #
 # 3. quad_form(w, Sigma_param) is NOT DPP-compliant. Either treat Sigma as
 #    a constant (update it on a slower cadence — covariance is slower-moving

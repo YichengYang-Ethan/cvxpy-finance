@@ -14,6 +14,7 @@ env/
 # Generated plot output (regenerate with --save-plots)
 examples/_dpp_plots/
 examples/_spinu_plots/
+examples/_bl_plots/
 
 # Jupyter
 .ipynb_checkpoints/
