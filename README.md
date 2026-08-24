@@ -74,11 +74,18 @@ empirically corroborated and empirically solved by the BL prior.
 
 ## Why this repo
 
-I am preparing for GSoC 2026 with CVXPY. The scope I am discussing with
-the mentors is **cookbook-style examples + DPP documentation contributions**,
-not new API surface. All three tutorials above are first-draft deliverables
-for that scope. A contribution to the performance-tips docs is planned
-next.
+These tutorials came out of working through CVXPY's Disciplined Parametrized
+Programming (DPP) rules on portfolio problems, where the caching wins are
+large but the compliance rules are easy to break without any warning.
+
+Two upstream contributions came out of the same work:
+
+- [cvxpy#3256](https://github.com/cvxpy/cvxpy/pull/3256) — fixes a `TypeError`
+  in the DQCP bisection solver, where lazy constraints were evaluated before
+  `t.value` was assigned (merged).
+- [cvxpy#3304](https://github.com/cvxpy/cvxpy/pull/3304) — documentation for
+  patterns that silently break DPP caching, plus a "when should you use DPP?"
+  checklist (open).
 
 ## Running
 
