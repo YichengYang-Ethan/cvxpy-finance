@@ -87,6 +87,12 @@ Two upstream contributions came out of the same work:
   patterns that silently break DPP caching, plus a "when should you use DPP?"
   checklist (open).
 
+My 2026 Google Summer of Code work was with PyMC, not CVXPY — streaming
+variational inference for larger-than-memory data. The write-up is
+[pymc-examples#892: out-of-core minibatch ADVI on a financial tick
+stream](https://github.com/pymc-devs/pymc-examples/pull/892), built on the
+[DataLoader merged in pymc-extras#698](https://github.com/pymc-devs/pymc-extras/pull/698).
+
 ## Running
 
 ```bash
